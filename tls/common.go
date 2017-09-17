@@ -102,9 +102,36 @@ const (
 type CurveID uint16
 
 const (
-	CurveP256 CurveID = 23
-	CurveP384 CurveID = 24
-	CurveP521 CurveID = 25
+	CurveT163k1       CurveID = 1
+	CurveT163r1       CurveID = 2
+	CurveT163r2       CurveID = 3
+	CurveT193r1       CurveID = 4
+	CurveT193r2       CurveID = 5
+	CurveT233k1       CurveID = 6
+	CurveT233r1       CurveID = 7
+	CurveT239k1       CurveID = 8
+	CurveT283k1       CurveID = 9
+	CurveT283r1       CurveID = 10
+	CurveT409k1       CurveID = 11
+	CurveT409r1       CurveID = 12
+	CurveT571k1       CurveID = 13
+	CurveT571r1       CurveID = 14
+	CurveP160k1       CurveID = 15
+	CurveP160r1       CurveID = 16
+	CurveP160r2       CurveID = 17
+	CurveP192k1       CurveID = 18
+	CurveP192r1       CurveID = 19
+	CurveP224k1       CurveID = 20
+	CurveP224r1       CurveID = 21
+	CurveP256k1       CurveID = 22
+	CurveP256r1       CurveID = 23
+	CurveP384r1       CurveID = 24
+	CurveP521r1       CurveID = 25
+	CurveBrainpoolP256r1 CurveID = 26
+	CurveBrainpoolP384r1 CurveID = 27
+	CurveBrainpoolP512r1 CurveID = 28
+	Curve25519          CurveID = 29
+	Curve448            CurveID = 30
 )
 
 func (curveID *CurveID) MarshalJSON() ([]byte, error) {
@@ -507,6 +534,9 @@ type Config struct {
 	// this Config is returned by a GetConfigForClient callback. It's used
 	// by serverInit in order to copy session ticket keys if needed.
 	originalConfig *Config
+
+    // Configuration string for client key exchange
+    KexConfig string
 }
 
 // ticketKeyNameLen is the number of bytes of identifier that is prepended to
@@ -662,7 +692,7 @@ func (c *Config) maxVersion() uint16 {
 	return c.MaxVersion
 }
 
-var defaultCurvePreferences = []CurveID{CurveP256, CurveP384, CurveP521}
+var defaultCurvePreferences = []CurveID{CurveP256r1, CurveP384r1, CurveP521r1}
 
 func (c *Config) curvePreferences() []CurveID {
 	if c.ExplicitCurvePreferences {

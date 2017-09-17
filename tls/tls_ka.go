@@ -53,13 +53,15 @@ func (ka *ecdheKeyAgreement) ECDHParams() *keys.ECDHParams {
 	out := new(keys.ECDHParams)
 	out.TLSCurveID = keys.TLSCurveID(ka.curveID)
 	out.ServerPublic = &keys.ECPoint{}
-	if ka.x != nil {
-		out.ServerPublic.X = new(big.Int)
-		out.ServerPublic.X.Set(ka.x)
-	}
-	if ka.y != nil {
-		out.ServerPublic.Y = new(big.Int)
-		out.ServerPublic.Y.Set(ka.y)
+	if ka.serverPublicKey != nil {
+		if ka.serverPublicKey.X != nil {
+			out.ServerPublic.X = new(big.Int)
+			out.ServerPublic.X.Set(ka.serverPublicKey.X)
+		}
+		if ka.serverPublicKey.Y != nil {
+			out.ServerPublic.Y = new(big.Int)
+			out.ServerPublic.Y.Set(ka.serverPublicKey.Y)
+		}
 	}
 	if len(ka.serverPrivKey) > 0 {
 		out.ServerPrivate = new(keys.ECDHPrivateParams)
