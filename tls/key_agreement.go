@@ -18,7 +18,7 @@ import (
 	"errors"
 	"io"
 	"math/big"
-    "strings"
+	"strings"
 
 	"github.com/zmap/zcrypto/ecdh"
 	"github.com/zmap/zcrypto/x509"
@@ -546,10 +546,10 @@ type ecdheKeyAgreement struct {
 	curve           ecdh.Curve
 	verifyError     error
 	curveID         CurveID
-	clientPrivKey []byte
-	serverPrivKey []byte
-	clientX       *big.Int
-	clientY       *big.Int
+	clientPrivKey   []byte
+	serverPrivKey   []byte
+	clientX         *big.Int
+	clientY         *big.Int
 }
 
 func (ka *ecdheKeyAgreement) generateServerKeyExchange(config *Config, cert *Certificate, clientHello *clientHelloMsg, hello *serverHelloMsg) (*serverKeyExchangeMsg, error) {
@@ -606,7 +606,7 @@ func (ka *ecdheKeyAgreement) processClientKeyExchange(config *Config, cert *Cert
 	if !ok {
 		return nil, errClientKeyExchange
 	}
-    ka.clientX, ka.clientY = publicKey.X, publicKey.Y
+	ka.clientX, ka.clientY = publicKey.X, publicKey.Y
 
 	preMasterSecret, err := ka.curve.GenerateSharedSecret(ka.privateKey, publicKey)
 	if err != nil {
