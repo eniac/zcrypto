@@ -493,7 +493,10 @@ func (c *Conn) clientHandshake() error {
 	if err != nil {
 		return err
 	}
-
+	if !c.config.DontBufferHandshakes {
+		c.buffering = true
+		defer c.flush()
+	}
 	if isResume {
 		if c.cipherError != nil {
 			c.sendAlert(alertHandshakeFailure)
@@ -511,14 +514,23 @@ func (c *Conn) clientHandshake() error {
 		if err := hs.sendFinished(); err != nil {
 			return err
 		}
+		if _, err := c.flush(); err != nil {
+			return err
+		}
 	} else {
 		if err := hs.doFullHandshake(); err != nil {
+			if err == ErrCertsOnly {
+				c.sendAlert(alertCloseNotify)
+			}
 			return err
 		}
 		if err := hs.establishKeys(); err != nil {
 			return err
 		}
 		if err := hs.sendFinished(); err != nil {
+			return err
+		}
+		if _, err := c.flush(); err != nil {
 			return err
 		}
 		if err := hs.readSessionTicket(); err != nil {
@@ -582,6 +594,12 @@ func (hs *clientHandshakeState) doFullHandshake() error {
 		}
 
 		c.handshakeLog.ServerCertificates = certMsg.MakeLog()
+
+		if c.config.CertsOnly {
+			// short circuit!
+			err = ErrCertsOnly
+			return err
+		}
 
 		if !invalidCert {
 			opts := x509.VerifyOptions{

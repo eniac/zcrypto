@@ -16,9 +16,23 @@ import (
 	"time"
 
 	"github.com/asaskevich/govalidator"
+	jsonKeys "github.com/zmap/zcrypto/json"
 	"github.com/zmap/zcrypto/x509/pkix"
-	"github.com/zmap/zgrab/ztools/keys"
 )
+
+var kMinTime, kMaxTime time.Time
+
+func init() {
+	var err error
+	kMinTime, err = time.Parse(time.RFC3339, "0001-01-01T00:00:00Z")
+	if err != nil {
+		panic(err)
+	}
+	kMaxTime, err = time.Parse(time.RFC3339, "9999-12-31T23:59:59Z")
+	if err != nil {
+		panic(err)
+	}
+}
 
 type auxKeyUsage struct {
 	DigitalSignature  bool   `json:"digital_signature,omitempty"`
@@ -139,6 +153,16 @@ func (p *PublicKeyAlgorithm) UnmarshalJSON(b []byte) error {
 	panic("unimplemented")
 }
 
+func clampTime(t time.Time) time.Time {
+	if t.Before(kMinTime) {
+		return kMinTime
+	}
+	if t.After(kMaxTime) {
+		return kMaxTime
+	}
+	return t
+}
+
 type auxValidity struct {
 	Start          string `json:"start"`
 	End            string `json:"end"`
@@ -147,8 +171,8 @@ type auxValidity struct {
 
 func (v *validity) MarshalJSON() ([]byte, error) {
 	aux := auxValidity{
-		Start:          v.NotBefore.UTC().Format(time.RFC3339),
-		End:            v.NotAfter.UTC().Format(time.RFC3339),
+		Start:          clampTime(v.NotBefore.UTC()).Format(time.RFC3339),
+		End:            clampTime(v.NotAfter.UTC()).Format(time.RFC3339),
 		ValidityPeriod: int(v.NotAfter.Sub(v.NotBefore).Seconds()),
 	}
 	return json.Marshal(&aux)
@@ -172,7 +196,7 @@ func (v *validity) UnmarshalJSON(b []byte) error {
 
 type jsonSubjectKeyInfo struct {
 	KeyAlgorithm    PublicKeyAlgorithm     `json:"key_algorithm"`
-	RSAPublicKey    *keys.RSAPublicKey     `json:"rsa_public_key,omitempty"`
+	RSAPublicKey    *jsonKeys.RSAPublicKey `json:"rsa_public_key,omitempty"`
 	DSAPublicKey    interface{}            `json:"dsa_public_key,omitempty"`
 	ECDSAPublicKey  interface{}            `json:"ecdsa_public_key,omitempty"`
 	SPKIFingerprint CertificateFingerprint `json:"fingerprint_sha256"`
@@ -290,7 +314,7 @@ func (c *Certificate) MarshalJSON() ([]byte, error) {
 	jc.SubjectKeyInfo.SPKIFingerprint = c.SPKIFingerprint
 	switch key := c.PublicKey.(type) {
 	case *rsa.PublicKey:
-		rsaKey := new(keys.RSAPublicKey)
+		rsaKey := new(jsonKeys.RSAPublicKey)
 		rsaKey.PublicKey = key
 		jc.SubjectKeyInfo.RSAPublicKey = rsaKey
 	case *dsa.PublicKey:
